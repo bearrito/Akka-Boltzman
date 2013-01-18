@@ -36,17 +36,13 @@ class InSynapseSpecs(_system : ActorSystem)  extends TestKit(_system) with FunSu
     system.shutdown()
   }
 
-  test("Is pending on construction")
-  {
-
+  test("Is pending on construction"){
        val fsm = TestFSMRef(new InSynapse("synapse",3))
        assert(fsm.stateName == Pending)
-
   }
 
 
   test("Has not received any transmitters on construction"){
-
    val fsm = TestFSMRef(new InSynapse("synapse",3))
    assert(fsm.stateData.receivedTransmitters.length == 0)
   }
@@ -67,22 +63,14 @@ class InSynapseSpecs(_system : ActorSystem)  extends TestKit(_system) with FunSu
   test("When enough transmitters received  neuron signal is sent")
   {
 
-    val fsm = TestFSMRef(new InSynapse("synapse",2,"n"))
-    val testActor = TestFSMRef(new NamedTestNeuron(),"n")
-    val data = InSynapseData(List(SynapticTransmitter(true,1)),Map(1 -> 1.0,2 -> 3.0))
-    fsm.setState(Pending,data)
+    val proxy = TestActorRef(new TestActorProxy(testActor),"n")
+    val fsm = TestFSMRef(new InSynapse("synapse",1,"n"),"synapse")
 
-    assert(fsm.stateName == Pending)
-    assert(fsm.stateData.receivedTransmitters.length == 1)
     val expected = SynapticTransmitter(true,2)
     within(2 seconds)
     {
-
        fsm ! expected
-       val td = testActor.stateName
-       assert(td == SomethingReceived)
-
-
+       expectMsg(InhibitNeuron)
     }
 
 
